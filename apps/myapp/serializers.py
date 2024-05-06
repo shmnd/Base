@@ -5,6 +5,7 @@ from erp_core.helpers.helpers import get_object_or_none
 import re
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import RefreshToken,TokenError
+from django.contrib.auth.models import Group
 
 
 
@@ -19,19 +20,21 @@ class NullableDateField(serializers.DateField):
 
 class CreateOrUpdateUserSerializer(serializers.ModelSerializer):
     user        = serializers.IntegerField(allow_null=True,required=False)
+
     username    = serializers.CharField(required=False)
-    email       = serializers.EmailField(required=False,allow_null=True,allow_blank=True)
     password    = serializers.CharField(write_only=True)
 
-    is_admin=serializers.BooleanField(default=False)
-    is_staff=serializers.BooleanField(default=False)
+    email       = serializers.EmailField(required=False,allow_null=True,allow_blank=True)
 
-    # groups=serializers.PrimaryKeyRelatedField(read_only=True,many=True,required=True)  #,queryset=Group.object.all()
+    is_admin    = serializers.BooleanField(default=False)
+    is_staff    = serializers.BooleanField(default=False)
+
+    groups      = serializers.PrimaryKeyRelatedField(read_only=False,many=True,queryset=Group.objects.all(),required=True)
 
 
     class Meta:
         model=Users
-        fields=['user','username','email','password','is_admin','is_staff','is_active']
+        fields=['user','username','email','password','is_admin','is_staff','is_active','groups']
 
 
     def validate(self, attrs):
@@ -64,23 +67,24 @@ class CreateOrUpdateUserSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
     
 
-    def create(self, validated_data):
-        password = validated_data.get('password')
 
-        instance=Users()
-        instance.username=validated_data.get('username')
-        instance.email=validated_data.get('email')
+    def create(self, validated_data):
+        password            = validated_data.get('password')
+
+        instance            = Users()
+        instance.username   = validated_data.get('username')    
+        instance.email      = validated_data.get('email')
         instance.set_password(password)
-        instance.is_active  = validated_data.get('is_active',True)
-        instance.is_admin=validated_data.get("is_admin")
-        instance.is_staff=True
+        instance.is_active  = validated_data.get('is_active')
+        instance.is_admin   = validated_data.get("is_admin")
+        instance.is_staff   = True
         # instance.is_password_reset_required   = True
         instance.save()
-        # groups=validated_data.pop('groups')
+        groups              = validated_data.pop('groups')
 
-        # for group_instance in groups:
-        #     if group_instance is not None:
-        #         group_instance.user_set.add(instance)
+        for group_instance in groups:
+            if group_instance is not None:
+                group_instance.user_set.add(instance)
         return instance
 
     
@@ -112,17 +116,17 @@ class CreateOrUpdateUserSerializer(serializers.ModelSerializer):
         return instance
     
 
-# class ActiveOrDeactivateUserSerializer(serializers.Serializer):
-#     user=serializers.IntegerField(required=True)
+class ActiveOrDeactivateUserSerializer(serializers.Serializer):
+    user=serializers.IntegerField(required=True)
 
-#     class Meta:
-#         model=Users
-#         fields=['user']
+    class Meta:
+        model=Users
+        fields=['user']
 
-#     def validate(self,instance,validate_date):
-#         instance.is_active=True if not instance.is_active() else False
-#         instance.save()
-#         return instance
+    def validate(self,instance,validate_date):
+        instance.is_active=True if not instance.is_active() else False
+        instance.save()
+        return instance
 
 
 

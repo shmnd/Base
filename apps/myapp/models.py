@@ -1,12 +1,11 @@
-from django.db import models
-
 # Create your models here.
-from typing import Any
 from django.db import models
 
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,PermissionsMixin
 
 from django.utils.translation import gettext_lazy as _
+
+from django.contrib.auth.models import Group
 
 
 # Create your models here.
@@ -72,6 +71,10 @@ class Users(AbstractBaseUser,AbstractDateFieldMix,PermissionsMixin):
 
     # failed_login_attempts         = models.IntegerField(_('Failed_login_attempts'),blank=True,null=True)
 
+    user_groups=models.ManyToManyField(Group,verbose_name=_('Groups'),blank=True,
+                                 help_text=_('The groups this user belongs to.A user get all the permissions granted to each groups.'),
+                                 related_name='user_set',related_query_name='user')
+
     USERNAME_FIELD    = 'username'
 
     REQUIRED_FIELDS   = ['email']
@@ -85,6 +88,16 @@ class Users(AbstractBaseUser,AbstractDateFieldMix,PermissionsMixin):
     def __str__(self):
         return "{username}".format(username=self.username)
     
+    # For checking permission to keep it simple all admin have all permission
+    def has_perm(self,perm,obj=None):
+        'Does the user have specif permission'
+        return self.is_admin
+    
+    # Does this user have permission to view this app?(Always "Yes" for a simply city)
+    def has_module_perm(self,perm,obj=None):
+        'Does user have permission to view the app "the app_label"?'
+        return True
+    
 
 class GeneratedAccessToken(AbstractDateFieldMix):
     token= models.TextField()
@@ -93,7 +106,3 @@ class GeneratedAccessToken(AbstractDateFieldMix):
     def __str__(self):
         return self.token
     
-
-
-    class Group:
-        pass
