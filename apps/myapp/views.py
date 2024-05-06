@@ -65,6 +65,7 @@ class CreateOrUpdateUseApiView(generics.GenericAPIView):
                 self.response_format['errors']=serializer.errors
                 return Response(self.response_format,status=status.HTTP_400_BAD_REQUEST)
             serializer.save()
+            
             self.response_format['status_code']=status.HTTP_201_CREATED
             self.response_format['message']= _success
             self.response_format['status']=True

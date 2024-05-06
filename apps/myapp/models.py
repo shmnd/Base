@@ -31,19 +31,19 @@ class UserManager(BaseUserManager):
         return user
     
 
-    def create_superuser(self,username,password,**extra_fiedls):
-        extra_fiedls.setdefault('is_superuser',True)
-        extra_fiedls.setdefault('is_active',True)
-        extra_fiedls.setdefault('is_admin',True)
-        extra_fiedls.setdefault('is_staff',True)
-        extra_fiedls.setdefault('is_verified',True)
+    def create_superuser(self,username,password,**extra_fields):
+        extra_fields.setdefault('is_superuser',True)
+        extra_fields.setdefault('is_active',True)
+        extra_fields.setdefault('is_staff',True)
+        extra_fields.setdefault('is_verified',True)
+        # extra_fields.setdefault('is_admin',True)
 
-        if extra_fiedls.get('is_staff') is not True:
+        if extra_fields.get('is_staff') is not True:
             raise ValueError(_('super user must have is_staff=True'))
-        if extra_fiedls.get('is_superuser') is not True:
+        if extra_fields.get('is_superuser') is not True:
             raise ValueError(_('super user must have is_superuser=True'))
         
-        return self.create_superuser(username,password,**extra_fiedls)
+        return self.create_user(username,password,**extra_fields)
     
 
 
@@ -63,7 +63,7 @@ class Users(AbstractBaseUser,AbstractDateFieldMix,PermissionsMixin):
     # last_password_reset           = models.DateField(_('Last_password_reset'),null=True,blank=True)
 
     is_verified                   = models.BooleanField(default=False)
-    is_amdin                      = models.BooleanField(default=False)
+    is_admin                      = models.BooleanField(default=False)
     is_staff                      = models.BooleanField(default=False)
     is_superuser                  = models.BooleanField(default=False)
     is_logged_in                  = models.BooleanField(default=False)
@@ -93,3 +93,7 @@ class GeneratedAccessToken(AbstractDateFieldMix):
     def __str__(self):
         return self.token
     
+
+
+    class Group:
+        pass

@@ -23,14 +23,15 @@ class CreateOrUpdateUserSerializer(serializers.ModelSerializer):
     email       = serializers.EmailField(required=False,allow_null=True,allow_blank=True)
     password    = serializers.CharField(write_only=True)
 
-    # is_admin=serializers.BooleanField(default=False)
-    # is_staff=serializers.BooleanField(default=False)
+    is_admin=serializers.BooleanField(default=False)
+    is_staff=serializers.BooleanField(default=False)
+
     # groups=serializers.PrimaryKeyRelatedField(read_only=True,many=True,required=True)  #,queryset=Group.object.all()
 
 
     class Meta:
         model=Users
-        fields=['user','username','email','password']
+        fields=['user','username','email','password','is_admin','is_staff','is_active']
 
 
     def validate(self, attrs):
@@ -44,7 +45,7 @@ class CreateOrUpdateUserSerializer(serializers.ModelSerializer):
 
         if username is not None:
             if not re.match("^[a-zA-Z0-9._@]*$",username):
-                raise serializers.ValidationError({'username':('Please enter a valid username,No numbers and special characters are allowed')})
+                raise serializers.ValidationError({'username':('Please enter a valid username only alphabets,No numbers and special characters are allowed')})
 
         if user is not None:
             user_instance   = get_object_or_none(Users,pk=user)
@@ -71,8 +72,8 @@ class CreateOrUpdateUserSerializer(serializers.ModelSerializer):
         instance.email=validated_data.get('email')
         instance.set_password(password)
         instance.is_active  = validated_data.get('is_active',True)
-        instance.is_amdin=validated_data.get("is_admin")
-        # instance._staff=True
+        instance.is_admin=validated_data.get("is_admin")
+        instance.is_staff=True
         # instance.is_password_reset_required   = True
         instance.save()
         # groups=validated_data.pop('groups')
@@ -86,9 +87,42 @@ class CreateOrUpdateUserSerializer(serializers.ModelSerializer):
 
 
 
-    # def update(self, instance, validated_data):
-    #     return super().update(instance, validated_data)
+    def update(self, instance, validated_data):
 
+        password=validated_data.get("password")
+        name=validated_data.get('name')
+
+        instance.username=validated_data.get('username')
+        instance.email=validated_data.get('email')
+
+        if password:
+            instance.set_password(password)
+            
+        if validated_data.get('is_active',''):
+            instance.is_active=validated_data.get('is_active')
+
+        if validated_data.get('is_admin',''):
+            instance.is_admin=validated_data.get('is_admin')
+
+        if validated_data.get('is_staff',''):
+            instance.is_staff=validated_data.get('is_staff')
+
+        instance.save()
+
+        return instance
+    
+
+# class ActiveOrDeactivateUserSerializer(serializers.Serializer):
+#     user=serializers.IntegerField(required=True)
+
+#     class Meta:
+#         model=Users
+#         fields=['user']
+
+#     def validate(self,instance,validate_date):
+#         instance.is_active=True if not instance.is_active() else False
+#         instance.save()
+#         return instance
 
 
 
