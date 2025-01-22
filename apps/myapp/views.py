@@ -59,6 +59,7 @@ class CreateOrUpdateUseApiView(generics.GenericAPIView):
             user_instance=get_object_or_none(Users,pk=serializer.validated_data.get('user',None))
 
             serializer=self.serializer_class(user_instance,data=request.data,context={'request':request})
+            
             if not serializer.is_valid():
                 self.response_format['status_code']=status.HTTP_400_BAD_REQUEST
                 self.response_format['status']=False
